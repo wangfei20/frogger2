@@ -6,16 +6,20 @@ import javax.swing.JLabel;
 
 public class Obstacle extends Sprite implements Runnable {
 	
-	private Boolean car, moving, rightToLeft, detectCollision, moveFrog;
+	private Boolean car, moving, rightToLeft, detectCollision, moveFrog, server;
 	private int speed;
 	private Thread t;
-	protected String colImage, frogImage, frogColImage;
+	//protected String colImage, frogImage, frogColImage;
 	
 	private JLabel label;	
-	private GamePrep game;
+	private ServerService game;
 	
 	private Character frog;
 	private JLabel frogLabel;
+
+	public Boolean isCar() {
+	    return car;
+	}
 	
 	public int getSpeed() {
 	    return speed;
@@ -24,7 +28,7 @@ public class Obstacle extends Sprite implements Runnable {
 	public JLabel getLabel() {
 	    return label;
 	}
-	
+	/*
 	public String getColImage() {
 	    return colImage;
 	}
@@ -47,7 +51,7 @@ public class Obstacle extends Sprite implements Runnable {
 
 	public void setFrogColImage(String frogColImage) {
 	    this.frogColImage = frogColImage;
-	}
+	}*/
 	
 	public void setFrog(Character temp) {
 		frog = temp;
@@ -73,7 +77,7 @@ public class Obstacle extends Sprite implements Runnable {
 	    this.car = temp;
 	}
 
-	public void setGame(GamePrep temp) {
+	public void setGame(ServerService temp) {
 		game = temp;
 	}
 
@@ -92,16 +96,30 @@ public class Obstacle extends Sprite implements Runnable {
 		this.car = false;
 		this.moveFrog = false;
 	}
-
+	
 	public Obstacle(int x, int y, int height, int width, int speed,
-			String image, Boolean rightToLeft) {
+			String image, Boolean rightToLeft, Boolean car) {
 		super(x, y, height, width, image);
 		// TODO Auto-generated constructor stub
 		this.moving = false;
-		this.car = false;
+		this.car = car;
 		this.speed = speed;
 		this.moveFrog = false;
 		this.rightToLeft = rightToLeft;
+		this.server = false;
+	}
+
+	public Obstacle(int x, int y, int height, int width, int speed,
+			String image, Boolean rightToLeft, Boolean car, Character frog, Boolean server) {
+		super(x, y, height, width, image);
+		// TODO Auto-generated constructor stub
+		this.moving = false;
+		this.car = car;
+		this.speed = speed;
+		this.moveFrog = false;
+		this.rightToLeft = rightToLeft;
+		this.server = server;
+		this.frog = frog;
 	}
 	
 	public void startThread() {
@@ -128,7 +146,6 @@ public class Obstacle extends Sprite implements Runnable {
 	public void run() {
 		// TODO Auto-generated method stub
 		
-		//System.out.println("run triggered");
 		
 		while (this.moving) {
 			
@@ -150,9 +167,6 @@ public class Obstacle extends Sprite implements Runnable {
 			
 			this.setX(x); //this.x = x; //rectangle doesn't update
 			
-			label.setLocation(this.x, this.y);
-			
-			
 			this.detectCollision();
 			
 			
@@ -161,39 +175,40 @@ public class Obstacle extends Sprite implements Runnable {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
 		}
 		
 	}
 	
-	private void detectCollision() {
+	public void detectCollision() {
 		if ( this.r.intersects( frog.getRectangle() ) ) {
+
+			game.handleCollision(this);
 			
-			
-			if(car) {
+			/*if(car) {
 				//collision detected
 				System.out.println("BOOM!");
-				this.stopThread();
+				//this.stopThread();
 			
-				game.handleCarCollision(this);
+				game.handleCollision(this);
 			} else {
 				// logs
 //
+				System.out.println("OnBoard!");
 				if(frog.getLog() == this) {
 //					// Frog gets off the log if it gets carried to the border
 					if( x >= GameProperties.SCREEN_WIDTH - frog.getWidth() || x <= 0) {
-						game.handleCarCollision(null);
+						game.handleCollision(this);
 					} else {
 						frog.setX(x);
 						frog.setY(y);
 					}
 					//move label
-					frogLabel.setLocation(
-							frog.getX(), frog.getY() );
+					//frogLabel.setLocation(
+					//		frog.getX(), frog.getY() );
 				}
 				
 				
-			}
+			}*/
 
 		}
 	}

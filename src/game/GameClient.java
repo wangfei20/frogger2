@@ -6,6 +6,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -30,42 +36,49 @@ import game.Obstacle;
 // 
 
 
-public class GamePrep extends JFrame implements KeyListener, ActionListener {
+public class GameClient extends JFrame implements KeyListener, ActionListener {
+	
+	final static int CLIENT_PORT = 5656;
+	final static int SERVER_PORT = 5556;
+
 	private Connection conn;
-	private JLabel nameLabel;
-	private JLabel scoreLabel;
+
 	private int score;
 	private String name;
 	
+	
+	
+
 	//Frog
 	private Character frog;
+	//Cars
+	private Obstacle[] cars;
+	//Logs
+	private Obstacle[] logs;
+	//GUI variables
+	private JLabel nameLabel;
+	private JLabel scoreLabel;
 	private JLabel frogLabel;
 	
-	
-	
-	//GUI variables
 	private Container content;
 	private JLabel backgroundLabel;
 	private ImageIcon backgroundIcon;
 
-	//Cars
-	private Obstacle[] row1Cars;
-	private Obstacle[] cars;
-	
-	//Logs
-	private Obstacle[] logs;
 	
 	private JButton startButton;
 	
 	
 	//GUI setup
-	public GamePrep(Connection conn) {
+	public GameClient() {
 		super("Frogger");
-		
-		this.conn = conn;
 
 		nameLabel = new JLabel();
 		scoreLabel = new JLabel();
+
+		
+		backgroundIcon = new ImageIcon(getClass().getResource("images/background.jpg"));
+		backgroundLabel = new JLabel();
+		
 		scoreLabel.setSize(200,30);
 		nameLabel.setLocation(50, 0);
 		scoreLabel.setLocation(300, 0);
@@ -78,35 +91,35 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 				GameProperties.FROG_HEIGHT, GameProperties.FROG_WIDTH, GameProperties.FROG_IMAGE);
 		
 		cars = new Obstacle[] {
-				new Obstacle(0, 560, 50, 50, 5, "car.png", true),
-				new Obstacle(80, 560, 50, 50, 5, "car.png", false),
-				new Obstacle(160, 560, 50, 50, 5, "car.png", false),
-				new Obstacle(300, 560, 50, 50, 5, "car.png", false),
+				new Obstacle(0, 560, 50, 50, 5, "car.png", true, true),
+				new Obstacle(80, 560, 50, 50, 5, "car.png", false, true),
+				new Obstacle(160, 560, 50, 50, 5, "car.png", false, true),
+				new Obstacle(300, 560, 50, 50, 5, "car.png", false, true),
 
-				new Obstacle(0, 500, 50, 50, 5, "car.png", false),
-				new Obstacle(80, 500, 50, 50, 5, "car.png", false),
-				new Obstacle(160, 500, 50, 50, 5, "car.png", false),
-				new Obstacle(300, 500, 50, 50, 5, "car.png", false),
+				new Obstacle(0, 500, 50, 50, 5, "car.png", false, true),
+				new Obstacle(80, 500, 50, 50, 5, "car.png", false, true),
+				new Obstacle(160, 500, 50, 50, 5, "car.png", false, true),
+				new Obstacle(300, 500, 50, 50, 5, "car.png", false, true),
 
-				new Obstacle(0, 450, 50, 50, 5, "car.png", false),
-				new Obstacle(80, 450, 50, 50, 5, "car.png", false),
-				new Obstacle(160, 450, 50, 50, 5, "car.png", false),
-				new Obstacle(300, 450, 50, 50, 10, "car.png", false),
+				new Obstacle(0, 450, 50, 50, 5, "car.png", false, true),
+				new Obstacle(80, 450, 50, 50, 5, "car.png", false, true),
+				new Obstacle(160, 450, 50, 50, 5, "car.png", false, true),
+				new Obstacle(300, 450, 50, 50, 10, "car.png", false, true),
 		};
 		
 		logs = new Obstacle[] {
-				new Obstacle(0, 130, 64,64, 10, "wood.png", true),
-				new Obstacle(80, 130, 64,64, 5, "wood.png", true),
-				new Obstacle(160, 130, 64,64, 10, "wood.png", true),
-				new Obstacle(400, 130, 64,64, 5, "wood.png", true),
-				new Obstacle(0, 200, 64,64, 20, "wood.png", false),
-				new Obstacle(80, 200, 64,64, 5, "wood.png", false),
-				new Obstacle(160, 200, 64,64, 10, "wood.png", false),
-				new Obstacle(400, 200, 64,64, 5, "wood.png", false),
-				new Obstacle(0, 270, 64,64, 10, "wood.png", true),
-				new Obstacle(80, 270, 64,64, 5, "wood.png", true),
-				new Obstacle(160, 270, 64,64, 10, "wood.png", true),
-				new Obstacle(400, 270, 64,64, 10, "wood.png", true),
+				new Obstacle(0, 130, 64,64, 10, "wood.png", true, false),
+				new Obstacle(80, 130, 64,64, 5, "wood.png", true, false),
+				new Obstacle(160, 130, 64,64, 10, "wood.png", true, false),
+				new Obstacle(400, 130, 64,64, 5, "wood.png", true, false),
+				new Obstacle(0, 200, 64,64, 20, "wood.png", false, false),
+				new Obstacle(80, 200, 64,64, 5, "wood.png", false, false),
+				new Obstacle(160, 200, 64,64, 10, "wood.png", false, false),
+				new Obstacle(400, 200, 64,64, 5, "wood.png", false, false),
+				new Obstacle(0, 270, 64,64, 10, "wood.png", true, false),
+				new Obstacle(80, 270, 64,64, 5, "wood.png", true, false),
+				new Obstacle(160, 270, 64,64, 10, "wood.png", true, false),
+				new Obstacle(400, 270, 64,64, 10, "wood.png", true, false),
 		};
 		
 		//set up screen
@@ -116,10 +129,6 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 		content.setBackground(Color.gray);
 		setLayout(null);
 
-		
-		backgroundIcon = new ImageIcon(getClass().getResource("images/background.jpg"));
-
-		backgroundLabel = new JLabel();
 		
 		backgroundLabel.setIcon(backgroundIcon);
 		backgroundLabel.setSize(
@@ -161,8 +170,7 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-
-		String inputName = javax.swing.JOptionPane.showInputDialog("Input your name:");
+/*
 		String sqlSelectFilter = 
 				"SELECT * FROM PLAYERS WHERE name = ?";
 		System.out.println(inputName);
@@ -198,7 +206,7 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
          } catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
 	private void addObstacle(Obstacle obstacle, Boolean isCar) {
@@ -219,7 +227,6 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 		car.setFrogLabel(frogLabel);
 		car.setLabel(carLabel);
 		car.setCar(isCar);
-		car.setGame(this);
 		
 		
 		//car.startThread();
@@ -229,7 +236,8 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 	}
 	
 	private void startGame() {
-		frog.init();
+	
+		/*frog.init();
 		frog.setX(GameProperties.SCREEN_WIDTH / 2 - GameProperties.FROG_WIDTH);
 		frog.setY(GameProperties.SCREEN_HEIGHT - GameProperties.FROG_HEIGHT - 60);
 		
@@ -242,43 +250,144 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
         for(int i = 0;i<cars.length;i++) {
         	cars[i].startThread();
         	logs[i].startThread();
-        }
+        }*/
 	}
 	
 	public static void main(String[] args) {
-		
-		Connection conn = null;
-		
-		try {
-			
-			Class.forName("org.sqlite.JDBC");
-			System.out.println("Driver Loaded");
-			
-			String dbURL = "jdbc:sqlite:products.db";
-			conn = DriverManager.getConnection(dbURL);
-			
-			if (conn != null) {
-				System.out.println("connected to database");
-				
-				DatabaseMetaData db = (DatabaseMetaData) conn.getMetaData();
-				
-                String sqlCreateTable = "CREATE TABLE IF NOT EXISTS PLAYERS " +
-                        "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        " NAME TEXT NOT NULL, " +
-                        " SCORE INT NOT NULL)";
 
-                try (PreparedStatement pstmtCreateTable = conn.prepareStatement(sqlCreateTable)) {
-                	pstmtCreateTable.executeUpdate();
-                	System.out.println("Table Successfully Created");
-                }
-            }
-		} catch (Exception e) {
+		GameClient myGame = new GameClient();
+		myGame.setVisible(true);
+		
+		Thread t1 = new Thread ( new Runnable () {
+			public void run ( ) {
+				synchronized(this) {
+					
+					ServerSocket client;
+					
+					try {
+						
+						client = new ServerSocket(CLIENT_PORT);
+						while(true) {
+							Socket s2;
+							try {
+								s2 = client.accept();
+								ClientService myService = new ClientService(s2, myGame.frog, myGame.cars, myGame.logs,myGame.frogLabel,myGame.nameLabel, myGame.scoreLabel);
+								//
+								Thread t2 = new Thread(myService);
+								t2.start();
+									
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							//System.out.println("client connected");
+							
+						}
+					
+					
+					
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println("Waiting for server responses...");
+
+					
+				}
+			}
+		});
+		t1.start( );
+		
+		
+		String inputName = javax.swing.JOptionPane.showInputDialog("Input your name:");
+		String command = "STARTGAME " + inputName + "\n";
+		
+		System.out.println("Sending: " + command);
+	    myGame.sendMessage(command);
+		/*try {
+			Socket s;
+			s = new Socket("localhost", SERVER_PORT);
+			
+			//Initialize data stream to send data out
+			OutputStream outstream = s.getOutputStream();
+			PrintWriter out = new PrintWriter(outstream);
+	
+			String command = "STARTGAME " + inputName + "\n";
+			
+			System.out.println("Sending: " + command);
+			out.println(command);
+			out.flush();
+			
+			s.close();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		
+		Thread t2 = new Thread(new Runnable() {
+	    	public void run() {
+	    		synchronized(this) {
+	    			while (true) {
+	    				
+	    				try {
+	    		    	Socket s = new Socket("localhost",SERVER_PORT);
+	    		    	
+	    		    	//Initialize data stream to send data out
+	    		    	OutputStream outstream = s.getOutputStream();
+	    		    	PrintWriter out = new PrintWriter(outstream);
+	    		    	
+	    		    	String command = "GETOBSTACLES\n";
+	    		    	//System.out.println("Sending : "+command);
+	    		    	out.println(command);
+	    		    	out.flush();
+	    		    	s.close();
+	    		    	Thread.sleep(100);
+	    		    	
+	    				} catch (UnknownHostException e) {
+	    					// TODO Auto-generated catch block
+	    					e.printStackTrace();
+	    				} catch (IOException e) {
+	    					// TODO Auto-generated catch block
+	    					e.printStackTrace();
+	    				} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+	    				
+	    		    	
+	    			}
+	    		}
+	    	}
+	    	
+	    });
+		t2.start();
+	}
+	
+	private void sendMessage(String message) {
+		try {
+			Socket s;
+			s = new Socket("localhost", SERVER_PORT);
+			
+			//Initialize data stream to send data out
+			OutputStream outstream = s.getOutputStream();
+			PrintWriter out = new PrintWriter(outstream);
+	
+			
+			System.out.println("Sending: " + message);
+			out.println(message);
+			out.flush();
+			
+			s.close();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		GamePrep myGame = new GamePrep(conn);
-		myGame.startGame();
-		myGame.setVisible(true);
 	}
 
 	@Override
@@ -317,16 +426,26 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 			
 		} 
 		
+		String message = "SETFROG " + x + " " + y + "\n";
+		
+		System.out.println("Sending: " + message);
+	    sendMessage(message);
+		
 		//update frog
-		frog.setX(x);
+		/*frog.setX(x);
 		frog.setY(y);
+		
+		
 		
 		System.out.println(y);
 		
 		//move label
 		frogLabel.setLocation(
 				frog.getX(), frog.getY() );
-		
+		*/
+	    
+	    /*
+	    
 		if(frog.getLanded() && frog.getLog() != null) {
 			frog.getLog().setMoveFrog(false);
 			frog.setLog(null);
@@ -355,12 +474,30 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 			if(!frog.getLanded()) {
 				gameOver(false);
 			}
-		}
+		}*/
 		
 	}
 	
-	public void handleCarCollision(Obstacle car) {
-		gameOver(false);
+	public void handleCollision(Obstacle obstacle) {
+		if(obstacle.isCar()) {
+
+			gameOver(false);
+		} else {
+			int x = obstacle.getX();
+			int y = obstacle.getY();
+			if(frog.getLog() == obstacle) {
+//				// Frog gets off the log if it gets carried to the border
+				if( obstacle.getX() >= GameProperties.SCREEN_WIDTH - frog.getWidth() || x <= 0) {
+					gameOver(false);
+				} else {
+					frog.setX(x);
+					frog.setY(y);
+				}
+				//move label
+				//frogLabel.setLocation(
+				//
+			}
+		}
 	}
 	
 	private void gameOver(boolean won){
@@ -419,15 +556,6 @@ public class GamePrep extends JFrame implements KeyListener, ActionListener {
 		
 		}*/
 
-		if ( e.getSource() == startButton ) {
-			
-			System.out.println("startButton pressed");	
-			
-			for(int i = 0;i < 4;i++) {
-				row1Cars[i].startThread();
-			}
-		
-		}
 		
 	}
 

@@ -4,6 +4,15 @@ public class Character extends Sprite {
 	
 	private Boolean landed, leftLog;
 	private Obstacle log;
+	private String name;
+	private int score;
+
+	public int getScore(){
+		return this.score;
+	}
+	public String getName(){
+		return this.name;
+	}
 	
 	public Obstacle getLog(){
 		return this.log;
@@ -19,6 +28,14 @@ public class Character extends Sprite {
 	
 	public void setLanded(Boolean landed) {
 		this.landed = landed;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	public void setLog(Obstacle l) {
