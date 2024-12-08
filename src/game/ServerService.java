@@ -107,18 +107,10 @@ public class ServerService implements Runnable {
 			}
 	        
 	        startGame();
+	        
 		} else if ( command.equals("GETFROG")) {
-			sendResponse("FROG " + frog.x + " " + frog.y);
-		/*} else if ( command.equals("SETFROG")) {
-			int x = in.nextInt();
-			int y = in.nextInt();
-			System.out.println("SET Frog: " + x + " " + y);
-			
-			frog.setX(x);
-			frog.setY(y);
-			
-			sendResponse("FROG " + frog.getX() + " " + frog.getY());
-			*/
+			sendResponse("FROG " + frog.x + " " + frog.y + "\n");
+	
 		}  else if ( command.equals("GETOBSTACLES")) {
 			try {
 				//send a response
@@ -129,13 +121,13 @@ public class ServerService implements Runnable {
 					PrintWriter out = new PrintWriter(outstream);
 					
 					for(int i = 0; i<cars.length; i++) {
-						String data = "CARS " + i + " " + cars[i].x + " " + cars[i].y;
+						String data = "CARS " + i + " " + cars[i].x + " " + cars[i].y + "\n";
 						//System.out.println("Sending: " + data);
 						out.println(data);
 						out.flush();
 					}
 					for(int i = 0; i<logs.length; i++) {
-						String data = "LOGS " + i + " " + logs[i].x + " " + logs[i].y;
+						String data = "LOGS " + i + " " + logs[i].x + " " + logs[i].y+ "\n";
 						//System.out.println("Sending: " + data);
 						out.println(data);
 						out.flush();
@@ -190,7 +182,7 @@ public class ServerService implements Runnable {
 			}
 			
 
-			sendResponse("FROG " + frog.getX() + " " + frog.getY());
+			sendResponse("FROG " + frog.getX() + " " + frog.getY() + "\n");
 			
 		} 
 	}
@@ -228,7 +220,7 @@ public class ServerService implements Runnable {
 					frog.setY(y);
 				}
 				
-				sendResponse("FROG " + frog.getX() + " " + frog.getY());
+				sendResponse("FROG " + frog.getX() + " " + frog.getY() + "\n");
 			}
 		}
 	}
@@ -236,9 +228,6 @@ public class ServerService implements Runnable {
 	private void gameOver(boolean won){
 		System.out.println("Game Over: " + won);
         for(int i = 0;i<cars.length;i++) {
-        	cars[i].setMoving(false);
-
-        	logs[i].setMoving(false);
         	cars[i].stopThread();
         	logs[i].stopThread();
         }
@@ -264,7 +253,7 @@ public class ServerService implements Runnable {
 			e.printStackTrace();
 		}
         
-        sendResponse("GAMEOVER " + (won ? 1 : 0));
+        sendResponse("GAMEOVER " + (won ? 1 : 0) + "\n");
         //startGame();
 	}
 	
